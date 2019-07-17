@@ -12,4 +12,4 @@ Small programs to manipulate and read metatags of media files
 * nfo2xml.pl -- converts kodi metadata .nfo-files to Matroshka metadata XML files.
 * thek2xml.pl -- converts mediathek metadata .txt-files to Matroshka metadata XML files. 
 * titlemkv.pl -- Sets title tags of BiCapitalized MKV-files automatically. Also, can prefix title tags, fix some titles, and create simple nfo-files for kodi.
-
+* type1-rename.pl -- renames type1 fonts acoording to their meta-info
