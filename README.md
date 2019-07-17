@@ -1,6 +1,7 @@
 # metatags
 Small programs to manipulate and read metatags of media files
 
+* AVinfo.csv -- (template) -- template for use with "mediainfo --inform=file:///path/to/AVinfo.csv"
 * djvu-meta.pl -- generates meta-tag-files for djvu
 * epub-rename.pl -- rename epub-files according to their mata-tags
 * exif-info.pl -- prints exif/xmp of pdf and djvu files.

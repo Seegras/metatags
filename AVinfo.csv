@@ -1,0 +1,20 @@
+General;%CompleteName%, %FileSize/String%\nTitle   : %Title%\nOriginal: %Original%\nEpisode : %PART_NUMBER%\nDate    : %Released_Date%\nDirector: %DIRECTOR%\nid      : %CATALOG_NUMBER%\nGenre   : %GENRE%\n\nSummary : %SUMMARY%\n\n
+Video;Video   : %Width% x %Height% (%AspectRatio%) $if(%Duration%,%Duration/String3% )$if(%FrameRate%,%FrameRate%fps )%Codec% %BitRate/String%\n
+Audio;Audio   : %Language% %SamplingRate/String% %Duration/String3% %Channel(s)/String% %BitRate/String%  %Format%\n
+Text;Subtitle: %Language% %Format%\n
+File_Begin;
+File_End;
+Page_Begin;
+Page_Middle;
+Page_End;
+General_Begin;
+General_End;
+Video_Begin;
+Video_Middle;
+Video_End;
+Audio_Begin;
+Audio_Middle
+Audio_End
+Text_Begin
+Text_Middle
+Text_End
