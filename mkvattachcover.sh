@@ -6,6 +6,11 @@
 # Author:  Peter Keel <seegras@discordia.ch>
 # License: MIT License
 #
+if ! command -v convert mkvpropedit >/dev/null 2>&1; then
+    echo >&2 "convert and mkvpropedit are required"
+    exit 1
+fi
+
 for filename in *.mkv; do 
 filename_no_ext=$(basename "$filename" .mkv);
 if [ -e "$filename_no_ext-poster.jpg" ]

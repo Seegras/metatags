@@ -7,6 +7,11 @@
 # Author:  Peter Keel <seegras@discordia.ch>
 # License: MIT License
 #
+if ! command -v mkvmerge >/dev/null 2>&1; then
+    echo >&2 "mkmerge is required"
+    exit 1
+fi
+
 debug=1
 for filename in *.srt; do 
     filename_no_ext=$(basename "$filename" .srt)
