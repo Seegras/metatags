@@ -1,6 +1,7 @@
 # metatags
 Small programs to manipulate and read metatags of media files
 
+* 720or1080.pl -- checks the resolution of movie files
 * AVinfo.csv -- (template) -- template for use with "mediainfo --inform=file:///path/to/AVinfo.csv"
 * djvu-meta.pl -- generates meta-tag-files for djvu
 * epub-rename.pl -- rename epub-files according to their mata-tags
