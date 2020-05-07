@@ -5,16 +5,20 @@
 # Author:  Peter Keel <seegras@discordia.ch>
 # Date:    
 # Revised: 2019-10-16
-# Version: 0.2
+# Version: 0.3
 # License: Artistic License 2.0 or MIT License
 # URL:     http://seegras.discordia.ch/Programs/
 # 
 
+use strict;
 use Getopt::Long;
 use Pod::Usage;
 
-$debug = 1;
-@files = ();
+my $debug = 1;
+my $needshelp = 0;
+my $file_name;
+my @files = ();
+
 
 &Getopt::Long::Configure( 'pass_through', 'no_autoabbrev', 'bundling');
 &Getopt::Long::GetOptions(
@@ -22,19 +26,19 @@ $debug = 1;
 );
 
 die "Usage: 720or1080 filename\n"       unless($ARGV[0]);
-$file = $ARGV[0];
+my $file = $ARGV[0];
 
 if ($needshelp) {
 pod2usage(1);
 }
 
 foreach $file_name (@ARGV) {
-    open(IN_FILE,"<$file_name") || die "Cannot open $file_name for input\n";
-    while(<IN_FILE>){
+    open(my $in_file,"<:encoding(UTF-8)","$file_name") || die "Cannot open $file_name for input\n";
+    while(<$in_file>){
 	$_ =~ /(\S+) (\d+)x(\d+)/;
 	$file=$1;
-	$width=$2;
-	$height=$3;
+	my $width=$2;
+	my $height=$3;
 	if (($width > 1920) && ($height <= 2160)) {
 	print ("2160p: ", $file, " ", $width, " ", $height, "\n");
 	}
@@ -51,5 +55,5 @@ foreach $file_name (@ARGV) {
 	print ("  LOW: ", $file, " ", $width, " ", $height, "\n");
 	}
     }
-    close IN;
+    close $in_file;
 }

@@ -3,8 +3,8 @@
 # epub-rename -- renames epub-files according to metatags 
 #
 # Author:  Peter Keel <seegras@discordia.ch>
-# Date:    19.01.2011
-# Changed: 12.04.2013
+# Date:    2011-01-19
+# Changed: 2013-04-12
 # Version: 0.9
 # License: Artistic License 2.0 or MIT License
 # URL:     http://seegras.discordia.ch/Programs/
@@ -21,17 +21,28 @@ use Pod::Usage;
 use Encode;
 use open qw/:std :utf8/;
 
+my $compat;
+my $debug;
+my $fixtitle;
+my $fixauthor;
+my $fixseries;
+my $needshelp;
+my $rename;
+my $exchange;
+my $verbose;
+my $dname;
+
 &Getopt::Long::Configure( 'pass_through', 'no_autoabbrev');
 &Getopt::Long::GetOptions(
-		'compat|c'		=> \$compat,
-		'debug|d'		=> \$debug,
-		'fixtitle|t'		=> \$fixtitle,
-		'fixauthor|f'		=> \$fixauthor,
-		'fixseries|s'		=> \$fixseries,
-		'help|h'		=> \$needshelp,
-		'rename|r'		=> \$rename,
-		'exchange|x'		=> \$exchange,
-		'verbose|v'		=> \$verbose,
+    'compat|c'          => \$compat,
+    'debug|d'           => \$debug,
+    'fixtitle|t'        => \$fixtitle,
+    'fixauthor|f'       => \$fixauthor,
+    'fixseries|s'       => \$fixseries,
+    'help|h'            => \$needshelp,
+    'rename|r'          => \$rename,
+    'exchange|x'        => \$exchange,
+    'verbose|v'         => \$verbose,
 );
 
 if (!$ARGV[0]) {
@@ -41,40 +52,40 @@ if (!$ARGV[0]) {
 }
 
 if ($needshelp) {
-pod2usage(1);
+    pod2usage(1);
 }
 
-opendir(IN_DIR, $dname) || die "I am unable to access that directory...Sorry";
-@dir_contents = readdir(IN_DIR);
-closedir(IN_DIR);
+opendir(my $in_dir, $dname) || die "I am unable to access that directory...Sorry";
+my @dir_contents = readdir($in_dir);
+closedir($in_dir);
 
 @dir_contents = sort(@dir_contents);
-    foreach $x (@dir_contents) {
-	if ($x ne ".." and $x ne ".") {
-	    if ($x =~m/.*\.epub$/i) {
-		$y = $x;
-		if ($compat) {
-		    getmetacompat($y);
-		} else {
-		    getmeta($y);
-		}
-		if ($exchange) {
-		    exchangetitle($y);
-		}
-		if ($fixtitle) {
-		    fix_title($y);
-		}
-		if ($fixauthor) {
-		    fix_author($y);
-		}
-		if ($fixseries) {
-		    fix_series($y);
-		}
-		if ($rename) {
-		    renepub();
-		}
-	    }
-	}
+    foreach $entry (@dir_contents) {
+        if ($entry ne ".." and $entry ne ".") {
+            if ($entry =~m/.*\.epub$/i) {
+                $y = $entry;
+                if ($compat) {
+                    getmetacompat($y);
+                } else {
+                    getmeta($y);
+                }
+                if ($exchange) {
+                    exchangetitle($y);
+                }
+                if ($fixtitle) {
+                    fix_title($y);
+                }
+                if ($fixauthor) {
+                    fix_author($y);
+                }
+                if ($fixseries) {
+                    fix_series($y);
+                }
+                if ($rename) {
+                    renepub();
+                }
+            }
+        }
     }
 
 sub exchangetitle {
@@ -89,9 +100,9 @@ sub fix_title {
     my $fname = $_[0];
     if (! ($oldtitle eq $title)) {
         $fname = decode("utf-8", $fname);
-	my $mytitle = $title;
-	system("export LC_CTYPE=en_GB.UTF-8; ebook-meta \"$fname\" --title=\"$mytitle\"");
-	print "changed $y $oldtitle to $mytitle\n";
+        my $mytitle = $title;
+        system("export LC_CTYPE=en_GB.UTF-8; ebook-meta \"$fname\" --title=\"$mytitle\"");
+        print "changed $y $oldtitle to $mytitle\n";
     }
 }
 
@@ -132,11 +143,11 @@ sub fix_series {
     
     if (! ($oldtitle eq $newtitle)) {
         $fname = decode("utf-8", $fname);
-	if ($seriesid) {
-	    system("export LC_CTYPE=en_GB.UTF-8; ebook-meta \"$fname\" --series=\"$series\" --index=\"$seriesid\" --title=\"$newtitle\"");
-	} else {
-	    system("export LC_CTYPE=en_GB.UTF-8; ebook-meta \"$fname\" --series=\"$series\" --title=\"$newtitle\"");
-	}
+        if ($seriesid) {
+            system("export LC_CTYPE=en_GB.UTF-8; ebook-meta \"$fname\" --series=\"$series\" --index=\"$seriesid\" --title=\"$newtitle\"");
+        } else {
+            system("export LC_CTYPE=en_GB.UTF-8; ebook-meta \"$fname\" --series=\"$series\" --title=\"$newtitle\"");
+        }
     }
 }
 
@@ -146,11 +157,11 @@ sub fix_author {
     my $newauth = "";
     my $cnt = 1;
     while ($cnt <= $authcount) {
-	$newauth .= $author[$cnt];
-	$cnt++;
-	if ($cnt <= $authcount) {
-	    $newauth .= " & ";
-	}
+        $newauth .= $author[$cnt];
+        $cnt++;
+        if ($cnt <= $authcount) {
+            $newauth .= " & ";
+        }
     }
     $newauth =~ s/; / & /go;
     #$newauth = encode("iso-8859-1", $newauth);
@@ -159,7 +170,7 @@ sub fix_author {
     $mytitle = $title;
     system("export LC_CTYPE=en_GB.UTF-8; ebook-meta \"$fname\" --title=\"$mytitle\" --authors=\"$newauth\"");
     if ($date) {
-	system("export LC_CTYPE=en_GB.UTF-8; ebook-meta \"$fname\" --title=\"$mytitle\" --authors=\"$newauth\" --date=$date");
+        system("export LC_CTYPE=en_GB.UTF-8; ebook-meta \"$fname\" --title=\"$mytitle\" --authors=\"$newauth\" --date=$date");
     }
     print "changed $fname $authors - $oldtitle to $newauth - $mytitle\n";
 }
@@ -173,15 +184,15 @@ $oldname = decode("utf-8", $y);
 $newfullname = $dname . "/" . $newname;
 $oldfullname = $dname . "/" . $oldname;
     if ($newfullname ne $oldfullname) {
-	$exname = $newfullname;
-	($exname,$suffix) = $exname =~ /^(.*)(\.[^.]*)$/;
-	while (-e "$newfullname") {    
-	    print ("WARN \"$newfullname\" exists\n");
-	    $counter++;
-	    $newfullname = $exname . "-" . $counter . $suffix;
-	}
-	rename ("$oldfullname", "$newfullname") unless ($newfullname eq $oldfullname);
-	print ("renamed $oldfullname to \"$newfullname\"\n") unless ($newfullname eq $oldfullname);
+        $exname = $newfullname;
+        ($exname,$suffix) = $exname =~ /^(.*)(\.[^.]*)$/;
+        while (-e "$newfullname") {    
+            print ("WARN \"$newfullname\" exists\n");
+            $counter++;
+            $newfullname = $exname . "-" . $counter . $suffix;
+        }
+        rename ("$oldfullname", "$newfullname") unless ($newfullname eq $oldfullname);
+        print ("renamed $oldfullname to \"$newfullname\"\n") unless ($newfullname eq $oldfullname);
     }
 }
 
@@ -267,39 +278,39 @@ sub regex_title {
     
     my $apos = qr/ (?: [\'] [[:lower:]]* )? /x;
     foreach ($string) {
-	s{
-		\b (_*) (?:
-			( [-_[:alpha:]]+ [@.:/] [-_[:alpha:]@.:/]+ $apos ) # URL, domain, or email
-			|
-			( (?i: $small_re ) $apos )                         # or small word (case-insensitive)
-			|
-			( [[:alpha:]] [[:lower:]'()\[\]{}]* $apos )       # or word w/o internal caps
-			|
-			( [[:alpha:]] [[:alpha:]'()\[\]{}]* $apos )       # or some other word
-		) (_*) \b
-	}{
-		$1 . (
-		  defined $2 ? $2         # preserve URL, domain, or email
-		: defined $3 ? "\L$3"     # lowercase small word
-		: defined $4 ? "\u\L$4"   # capitalize word w/o internal caps
-		: $5                      # preserve other kinds of word
-		) . $6
-	}exgo;
+        s{
+                \b (_*) (?:
+                        ( [-_[:alpha:]]+ [@.:/] [-_[:alpha:]@.:/]+ $apos ) # URL, domain, or email
+                        |
+                        ( (?i: $small_re ) $apos )                         # or small word (case-insensitive)
+                        |
+                        ( [[:alpha:]] [[:lower:]'()\[\]{}]* $apos )       # or word w/o internal caps
+                        |
+                        ( [[:alpha:]] [[:alpha:]'()\[\]{}]* $apos )       # or some other word
+                ) (_*) \b
+        }{
+                $1 . (
+                  defined $2 ? $2         # preserve URL, domain, or email
+                : defined $3 ? "\L$3"     # lowercase small word
+                : defined $4 ? "\u\L$4"   # capitalize word w/o internal caps
+                : $5                      # preserve other kinds of word
+                ) . $6
+        }exgo;
 
-	# exceptions for small words: capitalize at start and end of title
-	s{
-		(  \A [[:punct:]]*         # start of title...
-		|  [:.;?!][ ]+             # or of subsentence...
-		|  [ ][\'\"(\[][ ]*     )  # or of inserted subphrase...
-		( $small_re ) \b           # ... followed by small word
-	}{$1\u\L$2}xigo;
+        # exceptions for small words: capitalize at start and end of title
+        s{
+                (  \A [[:punct:]]*         # start of title...
+                |  [:.;?!][ ]+             # or of subsentence...
+                |  [ ][\'\"(\[][ ]*     )  # or of inserted subphrase...
+                ( $small_re ) \b           # ... followed by small word
+        }{$1\u\L$2}xigo;
 
-	s{
-		\b ( $small_re )      # small word...
-		(?= [[:punct:]]* \Z   # ... at the end of the title...
-		|   [\'\")\]] [ ] )   # ... or of an inserted subphrase?
-	}{\u\L$1}xigo;
-	$newstring .= $_;
+        s{
+                \b ( $small_re )      # small word...
+                (?= [[:punct:]]* \Z   # ... at the end of the title...
+                |   [\'\")\]] [ ] )   # ... or of an inserted subphrase?
+        }{\u\L$1}xigo;
+        $newstring .= $_;
     }
     if ($debug) { print (stderr " string-out: '$newstring'\n"); };
     return $newstring;
@@ -307,7 +318,7 @@ sub regex_title {
 
 sub getmeta {
 my $fname = $_[0];
-open(META,"epub-meta -atm \"$fname\"|") || die "Failed: $!\n";
+open(my $meta,"<","epub-meta -atm \"$fname\"|") || die "Failed: $!\n";
 
 $title ="";
 $author ="";
@@ -318,122 +329,122 @@ $auth = "";
 
     if ($debug) { print (stderr "$fname\n"); };
 
-    while ( <META> ) {
-	if ($_ =~ m/^Title: (.*)/i) {
-	    $title = $1;
-	    $oldtitle = $title;
-	    if ($title =~ m/\([0-9][0-9][0-9][0-9]\)$/) {
-		$date = $title;
-		$date =~ s/.*\(([0-9][0-9][0-9][0-9])\)$/$1/;
-	        if ($debug) { print (stderr " date: $date\n"); };
-	    };
-	    if ($title =~ m/(\d)[- ]?(\d)[- ]?(\d)[- ]?(\d)[- ]?(\d)[- ]?(\d)[- ]?(\d)[- ]?(\d)[- ]?(\d)[- ]?([0-9xX])$/) {
-		# the bloody title is an ISBN instead.
-		$isbn = $title;
-	    };
-	    $title = regex_title($title);
-	} elsif ($_ =~ m/^Author: (aut|Author): ([^(,]*)?,([^(,]*)\(.*\(.*\).*\)/i) {
-	    $authcount++;
-	    $author[$authcount] = $3 . " " . $2;
-	    $oldauthor[$authcount] = $2 . " " . $3;
-	    $author[$authcount] = regex_author($author[$authcount]);
-	} elsif ($_ =~ m/^Author: (aut|Author): ([^(,]*)?,([^(,]*)\(.*\)/i) {
-	    $authcount++;
-	    $author[$authcount] = $3 . " " . $2;
-	    $oldauthor[$authcount] = $2 . " " . $3;
-	    $author[$authcount] = regex_author($author[$authcount]);
-	} elsif ($_ =~ m/^Author: (aut|Author): (.*)?\(.*\(.*\)\)/i) {
-	    $authcount++;
-	    $author[$authcount] = $2;
-	    $oldauthor[$authcount] = $2;
-	    $author[$authcount] = regex_author($author[$authcount]);
-	} elsif ($_ =~ m/^Author: (aut|Author): (.*)?\(.*\)/i) {
-	    $authcount++;
-	    $author[$authcount] = $2;
-	    $oldauthor[$authcount] = $2;
-	    $author[$authcount] = regex_author($author[$authcount]);
-	} elsif ($_ =~ m/^Author: (aut|Author): (.*)?,(.*)/i) {
-	    $authcount++;
-	    $author[$authcount] = $3 . " " . $2;
-	    $oldauthor[$authcount] = $2 . " " . $3;
-	    $author[$authcount] = regex_author($author[$authcount]);
-	} elsif ($_ =~ m/^Author: (aut|Author): (.*)/i) {
-	    $authcount++;
-	    $author[$authcount] = $2;
-	    $oldauthor[$authcount] = $2;
-	    $author[$authcount] = regex_author($author[$authcount]);
-	} elsif ($_ =~ m/^Meta: calibre:series: (.*)/i) {
-	    $series = $1;
-	    $series = regex_title($series);
-	    $series =~ s/-/ /go;
-	} elsif ($_ =~ m/^Meta: calibre:series_index: (.*)/i) {
-	    $seriesid = $1;
-	    $seriesid = sprintf("%02d", $seriesid);
-	}
+    while ( <$meta> ) {
+        if ($_ =~ m/^Title: (.*)/i) {
+            $title = $1;
+            $oldtitle = $title;
+            if ($title =~ m/\([0-9][0-9][0-9][0-9]\)$/) {
+                $date = $title;
+                $date =~ s/.*\(([0-9][0-9][0-9][0-9])\)$/$1/;
+                if ($debug) { print (stderr " date: $date\n"); };
+            };
+            if ($title =~ m/(\d)[- ]?(\d)[- ]?(\d)[- ]?(\d)[- ]?(\d)[- ]?(\d)[- ]?(\d)[- ]?(\d)[- ]?(\d)[- ]?([0-9xX])$/) {
+                # the bloody title is an ISBN instead.
+                $isbn = $title;
+            };
+            $title = regex_title($title);
+        } elsif ($_ =~ m/^Author: (aut|Author): ([^(,]*)?,([^(,]*)\(.*\(.*\).*\)/i) {
+            $authcount++;
+            $author[$authcount] = $3 . " " . $2;
+            $oldauthor[$authcount] = $2 . " " . $3;
+            $author[$authcount] = regex_author($author[$authcount]);
+        } elsif ($_ =~ m/^Author: (aut|Author): ([^(,]*)?,([^(,]*)\(.*\)/i) {
+            $authcount++;
+            $author[$authcount] = $3 . " " . $2;
+            $oldauthor[$authcount] = $2 . " " . $3;
+            $author[$authcount] = regex_author($author[$authcount]);
+        } elsif ($_ =~ m/^Author: (aut|Author): (.*)?\(.*\(.*\)\)/i) {
+            $authcount++;
+            $author[$authcount] = $2;
+            $oldauthor[$authcount] = $2;
+            $author[$authcount] = regex_author($author[$authcount]);
+        } elsif ($_ =~ m/^Author: (aut|Author): (.*)?\(.*\)/i) {
+            $authcount++;
+            $author[$authcount] = $2;
+            $oldauthor[$authcount] = $2;
+            $author[$authcount] = regex_author($author[$authcount]);
+        } elsif ($_ =~ m/^Author: (aut|Author): (.*)?,(.*)/i) {
+            $authcount++;
+            $author[$authcount] = $3 . " " . $2;
+            $oldauthor[$authcount] = $2 . " " . $3;
+            $author[$authcount] = regex_author($author[$authcount]);
+        } elsif ($_ =~ m/^Author: (aut|Author): (.*)/i) {
+            $authcount++;
+            $author[$authcount] = $2;
+            $oldauthor[$authcount] = $2;
+            $author[$authcount] = regex_author($author[$authcount]);
+        } elsif ($_ =~ m/^Meta: calibre:series: (.*)/i) {
+            $series = $1;
+            $series = regex_title($series);
+            $series =~ s/-/ /go;
+        } elsif ($_ =~ m/^Meta: calibre:series_index: (.*)/i) {
+            $seriesid = $1;
+            $seriesid = sprintf("%02d", $seriesid);
+        }
     }
     if ($authcount == 0) {
-	$auth = "unknown";
-	$oldauth = "unknown";
+        $auth = "unknown";
+        $oldauth = "unknown";
     } elsif ($authcount == 1) {
-	$auth = $author[1];
-	$oldauth = $oldauthor[1];
+        $auth = $author[1];
+        $oldauth = $oldauthor[1];
     } elsif ($authcount == 2) {
-	$auth = $author[1] . " & " . $author[2];
-	$oldauth = $oldauthor[1] . " & " . $oldauthor[2];
+        $auth = $author[1] . " & " . $author[2];
+        $oldauth = $oldauthor[1] . " & " . $oldauthor[2];
     } elsif ($authcount == 3) {
-	$auth = $author[1] . " & " . $author[2] . " & " . $author[3];
-	$oldauth = $oldauthor[1] . " & " . $oldauthor[2] . " & " . $oldauthor[3];
+        $auth = $author[1] . " & " . $author[2] . " & " . $author[3];
+        $oldauth = $oldauthor[1] . " & " . $oldauthor[2] . " & " . $oldauthor[3];
     } else {
-	$auth = "anthology"; 
-	$oldauth = "anthology"; 
+        $auth = "anthology"; 
+        $oldauth = "anthology"; 
     }
 
     if ($series) {
-	$newname = $auth . " - " . $series . $seriesid . " - " . $title . ".epub";
+        $newname = $auth . " - " . $series . $seriesid . " - " . $title . ".epub";
     }
     else {
-	$newname = $auth . " - " . $title . ".epub";
+        $newname = $auth . " - " . $title . ".epub";
     }
     if ($verbose) {
-	print "$fname \"$newname\"\n"; 
+        print "$fname \"$newname\"\n"; 
     }
 }
 
 sub getmetacompat {
 my $fname = $_[0];
-open(META,"ebook-meta \"$fname\"|") || die "Failed: $!\n";
+open(my $meta,"<","ebook-meta \"$fname\"|") || die "Failed: $!\n";
 
 $title ="";
 $author ="";
 $series ="";
 $seriesid ="";
 
-while ( <META> ) {
+while ( <$meta> ) {
     if ($_ =~ m/Title               : (.*)/i) {
-	$title = $1;
-	$oldtitle = $title;
-	$title = regex_title($title);
-	if ($title =~ m/(\d)[- ]?(\d)[- ]?(\d)[- ]?(\d)[- ]?(\d)[- ]?(\d)[- ]?(\d)[- ]?(\d)[- ]?(\d)[- ]?([0-9xX])$/) {
-	# the bloody title is an ISBN instead.
-	$isbn = $title;
-	}
+        $title = $1;
+        $oldtitle = $title;
+        $title = regex_title($title);
+        if ($title =~ m/(\d)[- ]?(\d)[- ]?(\d)[- ]?(\d)[- ]?(\d)[- ]?(\d)[- ]?(\d)[- ]?(\d)[- ]?(\d)[- ]?([0-9xX])$/) {
+        # the bloody title is an ISBN instead.
+        $isbn = $title;
+        }
     } elsif ($_ =~ m/Author\(s\)           : (.*)?,(.*)\[.*\]/i) {
-	$author = $2 . $1;
-	$author =~ regex_author($author);
+        $author = $2 . $1;
+        $author =~ regex_author($author);
     } elsif ($_ =~ m/Author\(s\)           : (.*)\[.*\]/i) {
-	$author = $1;
-	$author =~ regex_author($author);
+        $author = $1;
+        $author =~ regex_author($author);
     } elsif ($_ =~ m/Author\(s\)           : (.*)?,(.*)/i) {
-	$author = $2 . $1;
-	$author =~ regex_author($author);
+        $author = $2 . $1;
+        $author =~ regex_author($author);
     } elsif ($_ =~ m/Author\(s\)           : (.*)/i) {
-	$author = $1;
-	$author =~ regex_author($author);
+        $author = $1;
+        $author =~ regex_author($author);
     } elsif ($_ =~ m/Series              : (.*) \#(\d.*)/i) {
-	$series = $1;
-	$series = regex_title($series);
-	$seriesid = $2;
-	$seriesid = sprintf("%02d", $seriesid);
+        $series = $1;
+        $series = regex_title($series);
+        $seriesid = $2;
+        $seriesid = sprintf("%02d", $seriesid);
     }
 }
 if ($series) {

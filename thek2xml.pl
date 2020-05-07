@@ -4,17 +4,21 @@
 #	      XML files.
 # 
 # Author:  Peter Keel <seegras@discordia.ch>
-# Date:    27.01.2015
-# Revised: 28.01.2015
-# Version: 0.2
+# Date:    2015-01-27
+# Revised: 2015-01-28
+# Revised: 2020-05-06
+# Version: 0.3
 # License: Artistic License 2.0 or MIT License
 # URL:     http://seegras.discordia.ch/Programs/
 #
 # Caveats: This was done within an hour late at night, so bugs are expected.
 #
-
+use strict;
 use Getopt::Long;
 use Pod::Usage;
+
+my $needshelp;
+my $dname;
 
 &Getopt::Long::Configure( 'pass_through', 'no_autoabbrev');
 &Getopt::Long::GetOptions(
@@ -28,26 +32,36 @@ if (!$ARGV[0]) {
 }
 
 if ($needshelp) {
-pod2usage(1);
+    pod2usage(1);
 }
 
-opendir(IN_DIR, $dname) || die "I am unable to access that directory...Sorry";
-@dir_contents = readdir(IN_DIR);
-closedir(IN_DIR);
+opendir(my $in_dir, $dname) || die "I am unable to access that directory...Sorry";
+my @dir_contents = readdir($in_dir);
+closedir($in_dir);
 
 @dir_contents = sort(@dir_contents);
-    foreach $filename (@dir_contents) {
-    ($name,$suffix) = $filename =~ /^(.*)(\.[^.]*)$/;
+    foreach my $filename (@dir_contents) {
+    my $title;
+    my $sender;
+    my $thema;
+    my $summary;
+    my $intdate;
+    my $datum;
+    my $url;
+    my $urlrtmp;
+    my $line;
+
+    (my $name, my $suffix) = $filename =~ /^(.*)(\.[^.]*)$/;
 	if ($filename ne ".." and $filename ne "." and $suffix eq ".txt") {
 
-        open (TXTIN,"$dname/$filename");
+        open (my $in_txt,"<","$dname/$filename");
 
 	my @array; {
 	    local $/ = '';
-	    @array = <TXTIN>;
+	    @array = <$in_txt>;
 	}
 
-	close (TXTIN);
+	close ($in_txt);
 
 	# my @lines = split /\n/, $array[0];
 	while($array[0] =~ /([^\n]+)\n?/g){
@@ -97,42 +111,42 @@ closedir(IN_DIR);
 	$summary =~ s/<br>/ /g;
 	$summary =~ s/<br\/>/ /g;
 	$summary =~ s/^\s+|\s+$//g;
-	open (XMLOUT, ">$dname/$name.xml");
-	# binmode(XMLOUT, ":utf8");
-	print XMLOUT "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
-	print XMLOUT "<!DOCTYPE Tags SYSTEM \"matroskatags.dtd\">\n";
-	print XMLOUT "<Tags>\n";
-	print XMLOUT "  <Tag>\n";
-	print XMLOUT "    <Targets>\n";
-	print XMLOUT "      <TargetTypeValue>50</TargetTypeValue>\n";
-	print XMLOUT "    </Targets>\n";
-	print XMLOUT "    <Simple>\n";
-	print XMLOUT "      <Name>TITLE</Name>\n";
-	print XMLOUT "      <String>$title</String>\n";
-	print XMLOUT "    </Simple>\n";
-	print XMLOUT "    <Simple>\n";
-	print XMLOUT "      <Name>SUBJECT</Name>\n";
-	print XMLOUT "      <String>$thema</String>\n";
-	print XMLOUT "    </Simple>\n";
-	print XMLOUT "    <Simple>\n";
-	print XMLOUT "      <Name>PUBLISHER</Name>\n";
-	print XMLOUT "      <String>$sender</String>\n";
-	print XMLOUT "    </Simple>\n";
-	print XMLOUT "    <Simple>\n";
-	print XMLOUT "      <Name>SUMMARY</Name>\n";
-	print XMLOUT "      <String>$summary</String>\n";
-	print XMLOUT "    </Simple>\n";
-	print XMLOUT "    <Simple>\n";
-	print XMLOUT "      <Name>URL</Name>\n";
-	print XMLOUT "      <String>$url</String>\n";
-	print XMLOUT "    </Simple>\n";
-	print XMLOUT "    <Simple>\n";
-	print XMLOUT "      <Name>DATE_RELEASED</Name>\n";
-	print XMLOUT "      <String>$intdate</String>\n";
-	print XMLOUT "    </Simple>\n";
-	print XMLOUT "  </Tag>\n";
-	print XMLOUT "</Tags>\n";
-	close (XMLOUT); 
+	open (my $out_xml, ">","$dname/$name.xml");
+	# binmode($out_xml, ":utf8");
+	print $out_xml "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
+	print $out_xml "<!DOCTYPE Tags SYSTEM \"matroskatags.dtd\">\n";
+	print $out_xml "<Tags>\n";
+	print $out_xml "  <Tag>\n";
+	print $out_xml "    <Targets>\n";
+	print $out_xml "      <TargetTypeValue>50</TargetTypeValue>\n";
+	print $out_xml "    </Targets>\n";
+	print $out_xml "    <Simple>\n";
+	print $out_xml "      <Name>TITLE</Name>\n";
+	print $out_xml "      <String>$title</String>\n";
+	print $out_xml "    </Simple>\n";
+	print $out_xml "    <Simple>\n";
+	print $out_xml "      <Name>SUBJECT</Name>\n";
+	print $out_xml "      <String>$thema</String>\n";
+	print $out_xml "    </Simple>\n";
+	print $out_xml "    <Simple>\n";
+	print $out_xml "      <Name>PUBLISHER</Name>\n";
+	print $out_xml "      <String>$sender</String>\n";
+	print $out_xml "    </Simple>\n";
+	print $out_xml "    <Simple>\n";
+	print $out_xml "      <Name>SUMMARY</Name>\n";
+	print $out_xml "      <String>$summary</String>\n";
+	print $out_xml "    </Simple>\n";
+	print $out_xml "    <Simple>\n";
+	print $out_xml "      <Name>URL</Name>\n";
+	print $out_xml "      <String>$url</String>\n";
+	print $out_xml "    </Simple>\n";
+	print $out_xml "    <Simple>\n";
+	print $out_xml "      <Name>DATE_RELEASED</Name>\n";
+	print $out_xml "      <String>$intdate</String>\n";
+	print $out_xml "    </Simple>\n";
+	print $out_xml "  </Tag>\n";
+	print $out_xml "</Tags>\n";
+	close ($out_xml); 
 	}
 
     }

@@ -1,26 +1,27 @@
 #!/usr/bin/perl
 #
 # exif-info -- filter for (mostly pdf, but also djvu) documents which 
-#	       prints out metadata and for pdf also the output of 
-# 	       pdftotext. Great for use with Midnight Commander: 
-# 	       View=%view{ascii} exif-info %f - 2> /dev/null
+#              prints out metadata and for pdf also the output of 
+#              pdftotext. Great for use with Midnight Commander: 
+#              View=%view{ascii} exif-info %f - 2> /dev/null
 #
 # Author:  Peter Keel <seegras@discordia.ch>
-# Date:    26.11.2013
-# Revised: 01.03.2014
-# Version: 0.2
+# Date:    2013-11-26
+# Revised: 2014-03-01
+# Revised: 2020-05-06
+# Version: 0.3
 # License: Artistic License 2.0 or MIT License
 # URL:     http://seegras.discordia.ch/Programs/
 #
-
+use strict;
 use Image::ExifTool qw(:Public);
 use open qw/:std :utf8/;
 
 die "Usage: exif-info filename\n"       unless($ARGV[0]);
-$file = $ARGV[0];
+my $file = $ARGV[0];
 
 my @ioTagList = ("Title", "Author", "Keywords", "ISBN", "EBX_PUBLISHER", "Publisher", "Subject", "CreateDate", "FileSize", "PageCount");
-$info = ImageInfo($file, \@ioTagList);
+my $info = ImageInfo($file, \@ioTagList);
 
 # Suppresses superfluous Title(1) and enables me to format the output
 if ($info->{'Title'} ne '') {
@@ -45,7 +46,7 @@ if ($info->{'Subject'} ne '') {
     print "Publisher: $info->{'Subject'}\n";
 }
 # tried parsing it first, was overkill.
-$pubdate = $info->{'CreateDate'};
+my $pubdate = $info->{'CreateDate'};
 $pubdate =~ s/([0-9].):.*/$1/;
 if ($pubdate ne '') {
     print "Date     : $pubdate\n";
@@ -59,9 +60,9 @@ if ($info->{'PageCount'} ne '') {
 print "\n";
 
 # I also tried CAM::PDF and Text::Autoformat, and they were slow.
-open PDF, "/usr/bin/pdftotext -raw -nopgbrk -q \"$file\" - 2>/dev/null | fmt -s |"
-	or die "error opening pdf \"$file\"\n";
-while (<PDF>) {
+open my $pdf_file,"<","/usr/bin/pdftotext -raw -nopgbrk -q \"$file\" - 2>/dev/null | fmt -s |"
+    or die "error opening pdf \"$file\"\n";
+while (<$pdf_file>) {
     print $_;
 }
-close PDF;
+close $pdf_file;

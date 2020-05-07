@@ -3,13 +3,14 @@
 # exif-rename -- renames various files according to their exif/xmp metatags
 #
 # Author:  Peter Keel <seegras@discordia.ch>
-# Date:    11.04.2011
-# Revised: 26.11.2013
-# Version: 0.3
+# Date:    2011-04-11
+# Revised: 2013-11-26
+# Revised: 2020-05-06
+# Version: 0.4
 # License: Artistic License 2.0 or MIT License
 # URL:     http://seegras.discordia.ch/Programs/
 # 
-
+use strict;
 use Getopt::Long;
 use Pod::Usage;
 use File::Copy;
@@ -18,13 +19,16 @@ use File::Basename;
 use Term::ANSIColor;
 use File::Copy;
 
-# Config Options
+my $needshelp;
+my $rename;
+my $move;
+my $file;
 
 &Getopt::Long::Configure( 'pass_through', 'no_autoabbrev');
 &Getopt::Long::GetOptions(
-		'help|h'		=> \$needshelp,
-		'rename|r'		=> \$rename,
-		'move|m'		=> \$move,
+    'help|h'    => \$needshelp,
+    'rename|r'  => \$rename,
+    'move|m'    => \$move,
 );
 
 if (!$ARGV[0]) {
@@ -37,68 +41,71 @@ if ($needshelp) {
 
 if ($move) {
     if  (-f "wouldberenamed") {
-	exit; 
+        exit; 
     }
     if  (! -d "wouldberenamed") {
-	mkdir ("wouldberenamed");
+        mkdir ("wouldberenamed");
     }
 }
 
-foreach $file (@ARGV) {
+foreach my $file (@ARGV) {
 
     $_ = $file; 
-    ($name,$suffix) = $file =~ /^(.*)(\.[^.]*)$/;
+    (my $name, my $suffix) = $file =~ /^(.*)(\.[^.]*)$/;
     my $exifTool = new Image::ExifTool;
     my $info = $exifTool->ImageInfo($file);
+    my $artist;
+    my $title;
 
     if ($$info{'Artist'}) {
         # print "$$info{'Artist'}\n"; 
-	$artist = $$info{'Artist'};
+        $artist = $$info{'Artist'};
     } elsif ($$info{'Author'}) {
         # print "$$info{'Author'}\n"; 
-	$artist = $$info{'Author'};
+        $artist = $$info{'Author'};
     } else {
-	$artist = "unknown";
+        $artist = "unknown";
     }
     if ($$info{'Title'}) {
         # print "$$info{'Title'}\n"; 
-	$title = $$info{'Title'};
+        $title = $$info{'Title'};
     } elsif ($$info{'Book Title'}) {
-	$title = $$info{'Book Title'};
+        $title = $$info{'Book Title'};
     } else {
-	$title = "unknown";
+        $title = "unknown";
     }
-$title =~ s/\//-/g; 
-$newfile = $artist . " - " . $title . $suffix;
+    my $title =~ s/\//-/g; 
+    my $newfile = $artist . " - " . $title . $suffix;
+    my $counter;
 
 # FIXME: code deciding new name stupid
 
     if ($newfile ne $file) {
         # $exname = $newfile;
         # $exname =~ s/\.$suffix//;
-        ($exname,$suffix) = $newfile =~ /^(.*)(\.[^.]*)$/;
-    	while (-e "$newfile") {    
+        (my $exname,$suffix) = $newfile =~ /^(.*)(\.[^.]*)$/;
+            while (-e "$newfile") {    
             print ("WARN \"$newfile\" exists\n");
             $counter++;
-	    $newfile = $exname . "-" . $counter . $suffix;
-	}
+            $newfile = $exname . "-" . $counter . $suffix;
+        }
     }
 
     if ($rename) {
         rename ("$file", "$newfile") unless ($newfile eq $file);
         print ("renamed $file to \"$newfile\"\n") unless ($newfile eq $file);
     } elsif ($newfile ne $file) {
-	print color 'bold blue';
-	print ("would rename: ");
-	print color 'reset';
-	print ("$file\n");
-	print color 'bold blue';
-	print (" ->           ");
-	print color 'reset';
-	print ("$newfile\n");
+        print color 'bold blue';
+        print ("would rename: ");
+        print color 'reset';
+        print ("$file\n");
+        print color 'bold blue';
+        print (" ->           ");
+        print color 'reset';
+        print ("$newfile\n");
     }
     if ($move) {
-	move("$file", "wouldberenamed/$file") unless ($newfile eq $file);
+        move("$file", "wouldberenamed/$file") unless ($newfile eq $file);
     }
 }
 

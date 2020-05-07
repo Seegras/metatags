@@ -3,8 +3,8 @@
 # exif-meta -- tries to fix and set exif/xmp metatags for pdf files.
 #
 # Author:  Peter Keel <seegras@discordia.ch>
-# Date:    11.04.2011
-# Revised: 16.03.2014
+# Date:    2011-04-11
+# Revised: 2014-03-16
 # Version: 0.8
 # License: Artistic License 2.0 or MIT License
 # URL:     http://seegras.discordia.ch/Programs/
@@ -18,19 +18,29 @@ use Path::Class;
 use Cwd; 
 use Image::ExifTool qw(:Public);
 
-# Config Options
+my $needshelp;
+my $forcetitle;
+my $fixpdf;
+my $f_authortitle;
+my $f_titleauthor;
+my $f_title;
+my $f_prefix;
+my $bicap;
+my $write;
+my $dname;
+my $debug;
 
 &Getopt::Long::Configure( 'pass_through', 'no_autoabbrev');
 &Getopt::Long::GetOptions(
-		'help|h'		=> \$needshelp,
-		'force|f'		=> \$forcetitle,
-		'fix'			=> \$fixpdf,
-		'format-authorttitle|a'	=> \$f_authortitle,
-		'format-titleauthor|x'	=> \$f_titleauthor,
-		'format-title|t'	=> \$f_title,
-		'format-prefix|p'	=> \$f_prefix,
-		'bicap|b'		=> \$bicap,
-		'write|w'		=> \$write,
+    'help|h'                    => \$needshelp,
+    'force|f'                   => \$forcetitle,
+    'fix'                       => \$fixpdf,
+    'format-authorttitle|a'     => \$f_authortitle,
+    'format-titleauthor|x'      => \$f_titleauthor,
+    'format-title|t'            => \$f_title,
+    'format-prefix|p'           => \$f_prefix,
+    'bicap|b'                   => \$bicap,
+    'write|w'                   => \$write,
 );
 
 if (!$ARGV[0]) {
@@ -619,8 +629,8 @@ sub regex_author {
     $string =~ s/^Nobody$//goi;
     $string =~ s/^\*$//goi;
     if ($bicap) {
-	$string =~ s/([A-Z])/lc($1)/ge;
-	$string =~ s/(\w+)/\u\L$1/g;
+        $string =~ s/([A-Z])/lc($1)/ge;
+        $string =~ s/(\w+)/\u\L$1/g;
     }
     # too short
     $string =~ s/^[0-9]$//goi;
@@ -721,8 +731,8 @@ sub regex_title {
     $string =~ s/^Hallo$//goi;
     # if this is set replace the name with its lowercase version.
     if ($bicap) {
-	$string =~ s/([A-Z])/lc($1)/ge;
-	$string =~ s/(\w+)/\u\L$1/g;
+        $string =~ s/([A-Z])/lc($1)/ge;
+        $string =~ s/(\w+)/\u\L$1/g;
     }
     $string =~ s/^\.+//goi;
     $string =~ s/^ - //goi;
@@ -752,9 +762,9 @@ print "$base\n";
 # if the Directory-name is in CamelCase, assume it's the author
 if ($base =~ /[[:upper:]](?:[[:upper:]]+|[[:lower:]]*)(?=$|[:upper:])/) {
     for ($base) {
-	my @baseparts = /[[:upper:]](?:[[:upper:]]+|[[:lower:]]*)(?=$|[[:upper:]])/g;
-	# print "$_ => @baseparts\n";
-	$baseauthor = join(" ",@baseparts);
+        my @baseparts = /[[:upper:]](?:[[:upper:]]+|[[:lower:]]*)(?=$|[[:upper:]])/g;
+        # print "$_ => @baseparts\n";
+        $baseauthor = join(" ",@baseparts);
 # FIXME: treatment: "Und" and "And" plus lone-standing initials.
     }
 }
@@ -767,183 +777,183 @@ foreach $file (@dir_contents) {
 
     if (-f $file) {
 
-	print "filename : $file\n";
-	# my $suffix = (fileparse($file,'\.[^.]*'))[2];
-	
+        print "filename : $file\n";
+        # my $suffix = (fileparse($file,'\.[^.]*'))[2];
+        
         $name = $file;
-	($name,$suffix) = $name =~ /^(.*)(\.[^.]*)$/;
+        ($name,$suffix) = $name =~ /^(.*)(\.[^.]*)$/;
 
-	# Does Title contain isbn?
-	if ($name =~ m/(\d)[- ]?(\d)[- ]?(\d)[- ]?(\d)[- ]?(\d)[- ]?(\d)[- ]?(\d)[- ]?(\d)[- ]?(\d)[- ]?([0-9xX])/) {
-	    # match above works, extraction below fails:
-	    ($isbn) = /(\d)[- ]?(\d)[- ]?(\d)[- ]?(\d)[- ]?(\d)[- ]?(\d)[- ]?(\d)[- ]?(\d)[- ]?(\d)[- ]?([0-9xX])/;
-	    print "isbn: $isbn\n";
-	};
+        # Does Title contain isbn?
+        if ($name =~ m/(\d)[- ]?(\d)[- ]?(\d)[- ]?(\d)[- ]?(\d)[- ]?(\d)[- ]?(\d)[- ]?(\d)[- ]?(\d)[- ]?([0-9xX])/) {
+            # match above works, extraction below fails:
+            ($isbn) = /(\d)[- ]?(\d)[- ]?(\d)[- ]?(\d)[- ]?(\d)[- ]?(\d)[- ]?(\d)[- ]?(\d)[- ]?(\d)[- ]?([0-9xX])/;
+            print "isbn: $isbn\n";
+        };
 
-	if (($name =~ /[[:upper:]0-9](?:[[:upper:]-0-9]+|[[:lower:]-0-9]*)(?=$|[[:upper:]-0-9])/) && ! ($name =~ /[\s_]/) ) {
-	    for ($name) {
-		my @parts = /[[:upper:]-0-9](?:[[:upper:]-0-9]+|[[:lower:]-0-9]*)(?=$|[[:upper:]-0-9])/g;
-		$title = join(" ",@parts);
-	    }
-	# fix adjacent slashes
-	$title =~ s/- / - /g;
+        if (($name =~ /[[:upper:]0-9](?:[[:upper:]-0-9]+|[[:lower:]-0-9]*)(?=$|[[:upper:]-0-9])/) && ! ($name =~ /[\s_]/) ) {
+            for ($name) {
+                my @parts = /[[:upper:]-0-9](?:[[:upper:]-0-9]+|[[:lower:]-0-9]*)(?=$|[[:upper:]-0-9])/g;
+                $title = join(" ",@parts);
+            }
+        # fix adjacent slashes
+        $title =~ s/- / - /g;
         $title =  cleanex($title);
-	}
+        }
 
-	if (($author ne "") && ($title ne "")) {
-	    print "from-nam1: $author ¤ $title\n"; 
-	} elsif (($title ne "") && ($baseauthor ne "")) {
-	    $author = $baseauthor;
-	    print "from-nam1: $author ¤ $title\n"; 
-	} elsif ($title ne "") {
-	    print "from-nam1: $title\n"; 
-	}
+        if (($author ne "") && ($title ne "")) {
+            print "from-nam1: $author ¤ $title\n"; 
+        } elsif (($title ne "") && ($baseauthor ne "")) {
+            $author = $baseauthor;
+            print "from-nam1: $author ¤ $title\n"; 
+        } elsif ($title ne "") {
+            print "from-nam1: $title\n"; 
+        }
 
 # FIXME: Authors with comma or ";" separated
 # FIXME: Authors with last-comma-first
 
-	$_ = $name; 
-	# print "file-excl:   $name\n";
-	if ($_ =~ m/(.+)\-(.+)\((.+)\,(.+)\)[ W]?/) {
-	    ($title, $author, $publisher, $date) = /(.+)\-(.+)\((.+)\,(.+)\)[ W]?/;
-	    if ($title eq "") {
-		$_ = $name;
-		($title, $publisher, $date) = /(.+)\((.+)\,(.+)\)/;
-	    }
-	    if ($date eq "") {
-		$_ = $name;
-		($title, $publisher) = /(.+)\((.+)\)/;
-	    }
-	    $author = cleanex($author);
-	    $title =  cleanex($title);
-	    $publisher = cleanex($publisher);
-    	    $date = cleanex($date);
-	    print "from-nam2: $author ¤ $title\n";
-	}
+        $_ = $name; 
+        # print "file-excl:   $name\n";
+        if ($_ =~ m/(.+)\-(.+)\((.+)\,(.+)\)[ W]?/) {
+            ($title, $author, $publisher, $date) = /(.+)\-(.+)\((.+)\,(.+)\)[ W]?/;
+            if ($title eq "") {
+                $_ = $name;
+                ($title, $publisher, $date) = /(.+)\((.+)\,(.+)\)/;
+            }
+            if ($date eq "") {
+                $_ = $name;
+                ($title, $publisher) = /(.+)\((.+)\)/;
+            }
+            $author = cleanex($author);
+            $title =  cleanex($title);
+            $publisher = cleanex($publisher);
+                $date = cleanex($date);
+            print "from-nam2: $author ¤ $title\n";
+        }
 
-	# those need to be forced
-	if ($f_authortitle && ! $f_titleauthor) {
-	    if ($name =~ m/(.*?) - (.*)/) {
-		($author, $title) = /(.*?) - (.*)/;
-		$title =  cleanex($title);
-		# those need to be forced
-		if ($f_prefix) {
-		    # usually this comes from calibre, so:
-		    $title =~ s/_ /: /goi;
-		    if ($title =~ m/(.*), The$/) {
-		    $title =~ s/, The$//goi;
-		    $title = "The ". $title;
-		    }
-		    if ($title =~ m/(.*), A$/) {
-		    $title =~ s/, A$//goi;
-		    $title = "A ". $title;
-		    }
-		    if ($title =~ m/(.*), An$/) {
-		    $title =~ s/, An$//goi;
-		    $title = "An ". $title;
-		    }
-		}
-		$author = cleanex($author);
-		print "from-nam3: $author ¤ $title\n";
-	    }
-	}
+        # those need to be forced
+        if ($f_authortitle && ! $f_titleauthor) {
+            if ($name =~ m/(.*?) - (.*)/) {
+                ($author, $title) = /(.*?) - (.*)/;
+                $title =  cleanex($title);
+                # those need to be forced
+                if ($f_prefix) {
+                    # usually this comes from calibre, so:
+                    $title =~ s/_ /: /goi;
+                    if ($title =~ m/(.*), The$/) {
+                    $title =~ s/, The$//goi;
+                    $title = "The ". $title;
+                    }
+                    if ($title =~ m/(.*), A$/) {
+                    $title =~ s/, A$//goi;
+                    $title = "A ". $title;
+                    }
+                    if ($title =~ m/(.*), An$/) {
+                    $title =~ s/, An$//goi;
+                    $title = "An ". $title;
+                    }
+                }
+                $author = cleanex($author);
+                print "from-nam3: $author ¤ $title\n";
+            }
+        }
 
-	# those need to be forced
-	if ($f_titleauthor && ! $f_authortitle) {
-	    if ($name =~ m/(.*) - (.*)/) {
-		($title, $author) = /(.*) - (.*)/;
-		$title =  cleanex($title);
-		$author = cleanex($author);
-		print "from-nam4: $author ¤ $title\n";
-	    }
-	}
+        # those need to be forced
+        if ($f_titleauthor && ! $f_authortitle) {
+            if ($name =~ m/(.*) - (.*)/) {
+                ($title, $author) = /(.*) - (.*)/;
+                $title =  cleanex($title);
+                $author = cleanex($author);
+                print "from-nam4: $author ¤ $title\n";
+            }
+        }
 
-	# those need to be forced
-	if ($f_title) {
-	    if ($_ =~ m/(.+)\ \((.+)\)/) {
-		($title, $date) = /(.*) \((.*)\)/;
-		$date =  cleanex($date);
-	    } else {
-		($title) = /(.*)/;
-	    }
-	    $title =  cleanex($title);
-	    print "from-nam5: $title ¤ $date\n";
-	}
-
-
-	if ($fixpdf) {
-	$newfile = $name . 2 . $suffix; 
-	$tempmeta = $name . 2 . ".meta"; 
-	    system ("pdftk \"$file\" dump_data output \"$tempmeta\" uncompress");
-	    system ("pdftk \"$file\" update_info \"$tempmeta\" output \"$newfile\"");
-	    rename ("$newfile", "$file");
-	    unlink ("$tempmeta");
-	}
-
-	my $exifTool = new Image::ExifTool;
-	my $info = $exifTool->ImageInfo($file);
-
-	print "from-meta: ";
+        # those need to be forced
+        if ($f_title) {
+            if ($_ =~ m/(.+)\ \((.+)\)/) {
+                ($title, $date) = /(.*) \((.*)\)/;
+                $date =  cleanex($date);
+            } else {
+                ($title) = /(.*)/;
+            }
+            $title =  cleanex($title);
+            print "from-nam5: $title ¤ $date\n";
+        }
 
 
-	if ($forcetitle) {
-	    if ($author ne "") {
-    		$exifTool->SetNewValue(Title => $author);
-		print "$author ¤ ";
-	    }
-	}
-	if ($$info{'Author'}  && ! $forcetitle) {
-	    if ($$info{'Author'} eq regex_author($$info{'Author'})) {
-    		print "$$info{'Author'} ¤ "; 
-	    } else {
-    		$exifTool->SetNewValue(Author => regex_author($$info{'Author'}));
-	    }
-	} else {
-    	    $exifTool->SetNewValue(Author => $author);
-	}
+        if ($fixpdf) {
+        $newfile = $name . 2 . $suffix; 
+        $tempmeta = $name . 2 . ".meta"; 
+            system ("pdftk \"$file\" dump_data output \"$tempmeta\" uncompress");
+            system ("pdftk \"$file\" update_info \"$tempmeta\" output \"$newfile\"");
+            rename ("$newfile", "$file");
+            unlink ("$tempmeta");
+        }
 
-	if ($forcetitle) {
-	    if ($title ne "") {
-		print "forectitle: $title ";
-    		$exifTool->SetNewValue(Title => $title);
-	    }
-	}
-	if ($$info{'Title'} && ! $forcetitle) {
-	    if ($$info{'Title'} eq regex_title($$info{'Title'})) {
-    		print "$$info{'Title'} "; 
-	    } else {
-    		$exifTool->SetNewValue(Title => regex_title($$info{'Title'}));
-    		print "" . regex_title($$info{'Title'}); 
-	    }
-	} else {
-    	    $exifTool->SetNewValue(Title => $title);
-	}
+        my $exifTool = new Image::ExifTool;
+        my $info = $exifTool->ImageInfo($file);
 
-	if ($$info{'ISBN'}) {
-    	    print "¤ $$info{'ISBN'} "; 
-	} else {
-    	    $exifTool->SetNewValue(ISBN => $isbn);
-	}
-	if ($$info{'Publisher'}) {
-    	    print "¤ $$info{'Publisher'} "; 
-	} else {
-    	    $exifTool->SetNewValue(Publisher => $publisher);
-	}
-	if ($$info{'Date'}) {
-	    print "$$info{'Date'} "; 
-	} else { 
-    	    $exifTool->SetNewValue(Date => $date);
-	}
+        print "from-meta: ";
 
-	print "\n\n";
 
-	if ($write) {
-	    $exifTool->Options(IgnoreMinorErrors => 1);
-    	    $exifTool->WriteInfo($file);
-	    if ($error = $exifTool->GetValue('Error')) {
-		print "$error\n";
-	    }
-	}
+        if ($forcetitle) {
+            if ($author ne "") {
+                    $exifTool->SetNewValue(Title => $author);
+                print "$author ¤ ";
+            }
+        }
+        if ($$info{'Author'}  && ! $forcetitle) {
+            if ($$info{'Author'} eq regex_author($$info{'Author'})) {
+                    print "$$info{'Author'} ¤ "; 
+            } else {
+                    $exifTool->SetNewValue(Author => regex_author($$info{'Author'}));
+            }
+        } else {
+                $exifTool->SetNewValue(Author => $author);
+        }
+
+        if ($forcetitle) {
+            if ($title ne "") {
+                print "forectitle: $title ";
+                    $exifTool->SetNewValue(Title => $title);
+            }
+        }
+        if ($$info{'Title'} && ! $forcetitle) {
+            if ($$info{'Title'} eq regex_title($$info{'Title'})) {
+                    print "$$info{'Title'} "; 
+            } else {
+                    $exifTool->SetNewValue(Title => regex_title($$info{'Title'}));
+                    print "" . regex_title($$info{'Title'}); 
+            }
+        } else {
+                $exifTool->SetNewValue(Title => $title);
+        }
+
+        if ($$info{'ISBN'}) {
+                print "¤ $$info{'ISBN'} "; 
+        } else {
+                $exifTool->SetNewValue(ISBN => $isbn);
+        }
+        if ($$info{'Publisher'}) {
+                print "¤ $$info{'Publisher'} "; 
+        } else {
+                $exifTool->SetNewValue(Publisher => $publisher);
+        }
+        if ($$info{'Date'}) {
+            print "$$info{'Date'} "; 
+        } else { 
+                $exifTool->SetNewValue(Date => $date);
+        }
+
+        print "\n\n";
+
+        if ($write) {
+            $exifTool->Options(IgnoreMinorErrors => 1);
+                $exifTool->WriteInfo($file);
+            if ($error = $exifTool->GetValue('Error')) {
+                print "$error\n";
+            }
+        }
     }
 }
 

@@ -3,26 +3,34 @@
 # djvu-meta -- generates meta-files for djvu
 # 
 # Author:  Peter Keel <seegras@discordia.ch>
-# Date:    01.03.2014
-# Revised: 
-# Version: 0.1
+# Date:    2014-03-01
+# Revised: 2020-05-06
+# Version: 0.2
 # License: Artistic License 2.0 or MIT License
 # URL:     http://seegras.discordia.ch/Programs/
 # 
 #
-
+use strict;
 use Getopt::Long;
 use Pod::Usage;
 use Image::ExifTool qw(:Public);
 use open qw/:std :utf8/;
 
+my $dname;
+my $needshelp;
+my $createmeta;
+my $debug;
+my $fixtitle;
+my $prefix;
+my @dir_contents;
+
 &Getopt::Long::Configure( 'pass_through', 'no_autoabbrev');
 &Getopt::Long::GetOptions(
-		'help|h'		=> \$needshelp,
-		'meta|m'		=> \$createmeta,
-		'prefix|p=s'		=> \$prefix,
-		'debug|d'		=> \$debug,
-		'fix|f'			=> \$fixtitle,
+    'help|h'            => \$needshelp,
+    'meta|m'            => \$createmeta,
+    'prefix|p=s'        => \$prefix,
+    'debug|d'           => \$debug,
+    'fix|f'             => \$fixtitle,
 );
 
 if (!$ARGV[0]) {
@@ -32,98 +40,99 @@ if (!$ARGV[0]) {
 }
 
 if ($needshelp) {
-pod2usage(1);
+    pod2usage(1);
 }
 
-opendir(IN_DIR, $dname) || die "I am unable to access that directory...Sorry";
-@dir_contents = readdir(IN_DIR);
-closedir(IN_DIR);
+opendir(my $in_dir, $dname) || die "I am unable to access that directory...Sorry";
+@dir_contents = readdir($in_dir);
+closedir($in_dir);
 
 @dir_contents = sort(@dir_contents);
-    foreach $filename (@dir_contents) {
-    ($name,$suffix) = $filename =~ /^(.*)(\.[^.]*)$/;
-	if ($filename ne ".." and $filename ne "." and $suffix eq ".djvu") {
-	    my $oldtitle = '';
-	    my $title = '';
-	    my $pubdate = '';
-	    my $publisher = '';
-	    my $author = '';
-	    my $isbn = '';
+    foreach my $filename (@dir_contents) {
+    (my $name, my $suffix) = $filename =~ /^(.*)(\.[^.]*)$/;
+        if ($filename ne ".." and $filename ne "." and $suffix eq ".djvu") {
+            my $oldtitle = '';
+            my $title = '';
+            my $pubdate = '';
+            my $publisher = '';
+            my $author = '';
+            my $isbn = '';
+            my $info;
 
-	    my @ioTagList = ("Title", "Author", "Keywords", "ISBN", "EBX_PUBLISHER", "Publisher", "Subject", "CreateDate", "FileSize", "PageCount");
-	    $info = ImageInfo($filename, \@ioTagList);
+            my @ioTagList = ("Title", "Author", "Keywords", "ISBN", "EBX_PUBLISHER", "Publisher", "Subject", "CreateDate", "FileSize", "PageCount");
+            $info = ImageInfo($filename, \@ioTagList);
 
-	    if ($info->{'Title'} ne '') {
-		$oldtitle = $info->{'Title'};
-		if ($debug) { print "$oldtitle\n"}
-	    }
-	    if ($info->{'CreateDate'} ne '') {
-		$pubdate = $info->{'CreateDate'};
-		$pubdate =~ s/([0-9].):.*/$1/;
-		if ($debug) { print "$pubdate\n"}
-	    }
-	    if ($info->{'Author'} ne '') {
-		$author = $info->{'Author'};
-		if ($debug) { print "$author\n"}
-	    }	
-	    if ($info->{'Publisher'} ne '') {
-		$publisher = $info->{'Publisher'};
-		if ($debug) { print "$publisher\n"}
-	    }
-	    if ($info->{'ISBN'} ne '') {
-		$isbn = $info->{'ISBN'};
-		if ($debug) { print "$isbn\n"}
-	    }
+            if ($info->{'Title'} ne '') {
+                $oldtitle = $info->{'Title'};
+                if ($debug) { print "$oldtitle\n"}
+            }
+            if ($info->{'CreateDate'} ne '') {
+                $pubdate = $info->{'CreateDate'};
+                $pubdate =~ s/([0-9].):.*/$1/;
+                if ($debug) { print "$pubdate\n"}
+            }
+            if ($info->{'Author'} ne '') {
+                $author = $info->{'Author'};
+                if ($debug) { print "$author\n"}
+            }        
+            if ($info->{'Publisher'} ne '') {
+                $publisher = $info->{'Publisher'};
+                if ($debug) { print "$publisher\n"}
+            }
+            if ($info->{'ISBN'} ne '') {
+                $isbn = $info->{'ISBN'};
+                if ($debug) { print "$isbn\n"}
+            }
 
-	    if ($fixtitle) {
-		$title = $oldtitle;   # title, gets sanitized
-	    } else {
-		$title = $name;   # title, gets sanitized
-	    }
-	    $title =~ s/([A-Z-])/_$1/g;
-	    $title =~ s/([0-9]+)/_$1/g;
-	    $title =~ s/_/ /g; # replace underscores with spaces
-	    $title =~ s/  / /g; # no double spaces
-	    $title =~ s/^-//g; # never start with a dash
-	    $title =~ s/^ //g; # don't start with a space
-	    $title =~ s/S ([0-9]+) - E ([0-9]+)/S$1E$2/g; # fix series
-	    $title =~ s/S ([0-9]+) E ([0-9]+)/S$1E$2/g; # fix series
-	    if ($oldtitle eq "") { 
-		$oldtitle = $title;
-		if ($debug) { print "$title\n"}
-	    } 
-	    if ($prefix) {
-		$oldtitle = $prefix . $oldtitle;
-	    } 
-	    if ($fixtitle) { 
-		if ($oldtitle ne $title) {
-		    $oldtitle = $title;
-		    if ($debug) { print "$title\n"}
-		}
-	    } 
-	    if ($createmeta) {
-		open (DJVUMETA,">:utf8", "$dname/$name.meta");
-		binmode(DJVUMETA, ":utf8");
-		if ($title ne "") {
-		    print DJVUMETA "title\t\"$oldtitle\"\n";
-		}
-		if ($pubdate ne "") {
-		    print DJVUMETA "year\t\"$pubdate\"\n";
-		}
-		if ($publisher ne "") {
-		    print DJVUMETA "publisher\t\"$publisher\"\n";
-		}
-		if ($author ne "") {
-		    print DJVUMETA "author\t\"$author\"\n";
-		}
-		if ($isbn ne "") {
-		    print DJVUMETA "ISBN\t\"$isbn\"\n";
-		}
-		close (DJVUMETA); 
-	    }
-	#binmode STDOUT, ":utf8"; 
-	system ("export LC_CTYPE=en_GB.UTF-8; /usr/bin/djvused -u -e \"create-shared-ant\; set-meta \\\"$name.meta\\\"\" -s \"$dname/$filename\"\n");
-	}
+            if ($fixtitle) {
+                $title = $oldtitle;   # title, gets sanitized
+            } else {
+                $title = $name;   # title, gets sanitized
+            }
+            $title =~ s/([A-Z-])/_$1/g;
+            $title =~ s/([0-9]+)/_$1/g;
+            $title =~ s/_/ /g; # replace underscores with spaces
+            $title =~ s/  / /g; # no double spaces
+            $title =~ s/^-//g; # never start with a dash
+            $title =~ s/^ //g; # don't start with a space
+            $title =~ s/S ([0-9]+) - E ([0-9]+)/S$1E$2/g; # fix series
+            $title =~ s/S ([0-9]+) E ([0-9]+)/S$1E$2/g; # fix series
+            if ($oldtitle eq "") { 
+                $oldtitle = $title;
+                if ($debug) { print "$title\n"}
+            } 
+            if ($prefix) {
+                $oldtitle = $prefix . $oldtitle;
+            } 
+            if ($fixtitle) { 
+                if ($oldtitle ne $title) {
+                    $oldtitle = $title;
+                    if ($debug) { print "$title\n"}
+                }
+            } 
+            if ($createmeta) {
+                open (my $divu_meta,">:encoding(UTF-8)", "$dname/$name.meta");
+                binmode($divu_meta, ":encoding(UTF-8)");
+                if ($title ne "") {
+                    print $divu_meta "title\t\"$oldtitle\"\n";
+                }
+                if ($pubdate ne "") {
+                    print $divu_meta "year\t\"$pubdate\"\n";
+                }
+                if ($publisher ne "") {
+                    print $divu_meta "publisher\t\"$publisher\"\n";
+                }
+                if ($author ne "") {
+                    print $divu_meta "author\t\"$author\"\n";
+                }
+                if ($isbn ne "") {
+                    print $divu_meta "ISBN\t\"$isbn\"\n";
+                }
+                close ($divu_meta); 
+            }
+        #binmode STDOUT, ":utf8"; 
+        system ("export LC_CTYPE=en_GB.UTF-8; /usr/bin/djvused -u -e \"create-shared-ant\; set-meta \\\"$name.meta\\\"\" -s \"$dname/$filename\"\n");
+        }
     }
 
 __END__
@@ -131,7 +140,7 @@ __END__
 =head1 NAME
 
 djvu-meta -- sets djvu metadata from titles or from matadata-files, can
-	     also generate metadata-files. needs djvused. 
+             also generate metadata-files. needs djvused. 
 
 =head1 SYNOPSIS
 
