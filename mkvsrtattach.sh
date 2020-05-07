@@ -12,8 +12,8 @@ if ! command -v mkvmerge >/dev/null 2>&1; then
     exit 1
 fi
 
-DEBUG=1
-for FILE in *.srt; do 
+DEBUG=0
+for FILE in ./*.srt; do 
     filename_no_ext="$( basename "$FILE" .srt )"
     # easy case, just attach the subtitle
     if [ -e "$filename_no_ext.mkv" ]
@@ -23,11 +23,11 @@ for FILE in *.srt; do
             rm "${FILE}"
     fi
     IFS='-' read -ra fields <<< "${filename_no_ext}"
-    if [ "${DEBUG}" ]; then set | grep ^fields=\\\|^var=; fi
+    if [[ "${DEBUG}" ]]; then set | grep ^fields=\\\|^var=; fi
     fnum=$((${#fields[@]}-1))
-    if [ ${DEBUG} ]; then echo ${fnum}; fi
+    if [[ ${DEBUG} ]]; then echo ${fnum}; fi
     # in this case, the ending is probably a language code
-    if [ ${#fields[${fnum}]} -eq 3 ]
+    if [[ ${#fields[${fnum}]} -eq 3 ]]
     then
         mkvfields=$(fnum-1)
         i=1
@@ -38,7 +38,7 @@ for FILE in *.srt; do
             base+=${fields[$i]}
             i=$(i+1)
         done
-        if [ ${DEBUG} ]; then echo "${base}"; fi
+        if [[ ${DEBUG} ]]; then echo "${base}"; fi
         LANGCODE=${fields[$fnum]}
         declare -l LANGCODE
         if [ ${DEBUG} ]; then echo "${LANGCODE}"; fi
@@ -50,5 +50,4 @@ for FILE in *.srt; do
             rm "${FILE}"
         fi
     fi
-
 done

@@ -45,22 +45,22 @@ my @dir_contents = readdir($in_dir);
 closedir($in_dir);
 
 @dir_contents = sort(@dir_contents);
-    foreach $entry (@dir_contents) {
+    foreach my $entry (@dir_contents) {
         if ($entry =~ m/\.[Pp][Ff][Bb]/i) {
-    		&pfb;
-	}
+            &pfb;
+        }
         if ($entry =~ m/\.[Pp][Ff][Aa]/i) {
-    		&pfa;
-	}
+            &pfa;
+        }
         if ($entry =~ m/\.[Pp][Ff][Mm]/i) {
-    		&pfm;
-	}
+            &pfm;
+        }
         if ($entry =~ m/\.[Ii][Nn][Ff]/i) {
-    		&inf;
-	}
+            &inf;
+        }
         if ($entry =~ m/\.[Aa][Ff][Mm]/i) {
-    		&afm;
-	}
+            &afm;
+        }
     }
 
 sub afm { 
@@ -68,11 +68,10 @@ sub afm {
 open(my $in_file,"<","$dname/$filename") || die "Cannot open $filename for input\n";
 while(<$in_file>){
     if ($_ =~ m/FullName/i) {
-	chomp($_);
+        chomp($_);
         $_ =~ s/.*FullName\ //i;
-	$_ =~ s/[^$OK_CHARS]//go;
-	rename("$dname/$filename","$dname/$_.afm") unless ("$filename" eq "$_.afm");
-
+        $_ =~ s/[^$OK_CHARS]//go;
+        rename("$dname/$filename","$dname/$_.afm") unless ("$filename" eq "$_.afm");
     }
 }
 close $in_file;
@@ -83,10 +82,10 @@ $filename = $entry;
 open(my $in_file,"<","$dname/$filename") || die "Cannot open $filename for input\n";
 while(<$in_file>){
     if ($_ =~ m/FullName/i) {
-	chomp($_);
+        chomp($_);
         $_ =~ s/.*FullName\ \(([^\)]*)\).*/$1/i;
-	$_ =~ s/[^$OK_CHARS]//go;
-	rename("$dname/$filename","$dname/$_.pfa") unless ("$filename" eq "$_.pfa");
+        $_ =~ s/[^$OK_CHARS]//go;
+        rename("$dname/$filename","$dname/$_.pfa") unless ("$filename" eq "$_.pfa");
     }
 }
 close $in_file;
@@ -98,9 +97,9 @@ open(my $in_file,"<","$dname/$filename") || die "Cannot open $filename for input
 while(<$in_file>){
     if ($_ =~ m/FullName/i) {
         $_ =~ s/.*FullName\ \(([^\)]*)\)/$1/i;
-	chomp($_);
-	$_ =~ s/[^$OK_CHARS]//go;
-	rename("$dname/$filename","$dname/$_.inf") unless ("$filename" eq "$_.inf");
+        chomp($_);
+        $_ =~ s/[^$OK_CHARS]//go;
+        rename("$dname/$filename","$dname/$_.inf") unless ("$filename" eq "$_.inf");
     }
 }
 close $in_file;
@@ -112,9 +111,9 @@ open(my $in_file,"<","$dname/$filename") || die "Cannot open $filename for input
 while(<$in_file>){
     if ($_ =~ m/PostScript\000/i) {
         $_ =~ s/.*PostScript\0([^\0]*)\0([^\0]*)\0.*/$2/g; 
-	chomp($_);
-	$_ =~ s/[^$OK_CHARS]//go;
-	rename("$dname/$filename","$dname/$_.pfm") unless ("$filename" eq "$_.pfm");
+        chomp($_);
+        $_ =~ s/[^$OK_CHARS]//go;
+        rename("$dname/$filename","$dname/$_.pfm") unless ("$filename" eq "$_.pfm");
     }
 }
 close $in_file;
@@ -126,8 +125,8 @@ open(my $in_file,"<","$dname/$filename") || die "Cannot open $filename for input
 while(<$in_file>){
     if ($_ =~ m/\/FullName/i) {
         $_ =~ s/.*?FullName.*?\(([^\)]*?)\).*/$1/s;
-	$_ =~ s/[^$OK_CHARS]//go;
-	rename("$dname/$filename","$dname/$_.pfb") unless ("$filename" eq "$_.pfb");
+        $_ =~ s/[^$OK_CHARS]//go;
+        rename("$dname/$filename","$dname/$_.pfb") unless ("$filename" eq "$_.pfb");
     }
 }
 close $in_file;

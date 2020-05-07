@@ -15,8 +15,10 @@
 # http://plasmasturm.org/code/titlecase/
 # which also lies under the MIT-License.
 #
-
+use strict;
 use Getopt::Long;
+use File::Which;
+
 use Pod::Usage;
 use Encode;
 use open qw/:std :utf8/;
@@ -31,6 +33,21 @@ my $rename;
 my $exchange;
 my $verbose;
 my $dname;
+my $newname;
+my $title;
+my $authors;
+my @author;
+my $seriesid;
+my $series;
+my $isbn;
+my $auth;
+my $oldtitle;
+my $oldauth;
+my @oldauthor;
+my $authcount;
+my $y;
+my $date;
+my $epubmeta_path;
 
 &Getopt::Long::Configure( 'pass_through', 'no_autoabbrev');
 &Getopt::Long::GetOptions(
@@ -51,6 +68,10 @@ if (!$ARGV[0]) {
     $dname=$ARGV[0]; 
 }
 
+my $epubmeta_path = which('epub-meta');
+if (! -x $epubmeta_path) {
+    die "epub-meta not found in path";
+}
 if ($needshelp) {
     pod2usage(1);
 }
@@ -60,7 +81,7 @@ my @dir_contents = readdir($in_dir);
 closedir($in_dir);
 
 @dir_contents = sort(@dir_contents);
-    foreach $entry (@dir_contents) {
+    foreach my $entry (@dir_contents) {
         if ($entry ne ".." and $entry ne ".") {
             if ($entry =~m/.*\.epub$/i) {
                 $y = $entry;
@@ -109,6 +130,9 @@ sub fix_title {
 sub fix_series {
     my $fname = $_[0];
     my $newstr = $title;
+    my $newtitle;
+    my $newseries;
+    my $newseriesid;
     if ($newstr =~ m/[^#]+#?[0-9]+ ?[-:] ?.*/) {
     ($newseries, $newseriesid, $newtitle) = $newstr =~ /([^#]+)#?([0-9\.]+) ?[-:] ?(.*)/i;
     } elsif ($newstr =~ m/[^\(]+\([^#]+#?[0-9\.]+\)/) {
@@ -156,6 +180,7 @@ sub fix_author {
     my $fname = $_[0];
     my $newauth = "";
     my $cnt = 1;
+    my $mytitle;
     while ($cnt <= $authcount) {
         $newauth .= $author[$cnt];
         $cnt++;
@@ -180,7 +205,12 @@ sub fix_author {
 sub renepub {
 my $counter=0;
 my $exname = $newname;
-$oldname = decode("utf-8", $y);
+my $newfullname;
+my $oldfullname;
+my $exname;
+my $suffix;
+
+my $oldname = decode("utf-8", $y);
 $newfullname = $dname . "/" . $newname;
 $oldfullname = $dname . "/" . $oldname;
     if ($newfullname ne $oldfullname) {
@@ -318,14 +348,15 @@ sub regex_title {
 
 sub getmeta {
 my $fname = $_[0];
-open(my $meta,"<","epub-meta -atm \"$fname\"|") || die "Failed: $!\n";
+open(my $meta,"-|:encoding(UTF-8)","$epubmeta_path -atm \"$fname\"") or die "Failed: $!\n";
 
-$title ="";
-$author ="";
-$series ="";
-$seriesid ="";
-$authcount ="";
-$auth = "";
+my $title ="";
+my $author ="";
+my $series ="";
+my $seriesid ="";
+my $authcount ="";
+my $auth = "";
+my $date;
 
     if ($debug) { print (stderr "$fname\n"); };
 
@@ -412,12 +443,12 @@ $auth = "";
 
 sub getmetacompat {
 my $fname = $_[0];
-open(my $meta,"<","ebook-meta \"$fname\"|") || die "Failed: $!\n";
+open(my $meta,"-|:encoding(UTF-8)","ebook-meta \"$fname\"") or die "Failed: $!\n";
 
-$title ="";
-$author ="";
-$series ="";
-$seriesid ="";
+my $title ="";
+my $author ="";
+my $series ="";
+my $seriesid ="";
 
 while ( <$meta> ) {
     if ($_ =~ m/Title               : (.*)/i) {

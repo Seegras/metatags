@@ -32,7 +32,7 @@ if ($needshelp) {
 pod2usage(1);
 }
 
-foreach $file_name (@ARGV) {
+foreach my $file_name (@ARGV) {
     open(my $in_file,"<:encoding(UTF-8)","$file_name") || die "Cannot open $file_name for input\n";
     while(<$in_file>){
 	$_ =~ /(\S+) (\d+)x(\d+)/;

@@ -5,11 +5,12 @@
 # Author:  Peter Keel <seegras@discordia.ch>
 # Date:    2011-04-11
 # Revised: 2014-03-16
-# Version: 0.8
+# Revised: 2020-05-06
+# Version: 0.9
 # License: Artistic License 2.0 or MIT License
 # URL:     http://seegras.discordia.ch/Programs/
 #
-
+use strict;
 use Getopt::Long;
 use Pod::Usage;
 use File::Basename;
@@ -744,10 +745,9 @@ sub regex_title {
     return $string; 
 }
 
-
-opendir(IN_DIR, $dname) || die "I am unable to access that directory...Sorry";
-@dir_contents = readdir(IN_DIR);
-closedir(IN_DIR);
+opendir(my $in_dir, $dname) || die "I am unable to access that directory...Sorry";
+my @dir_contents = readdir($in_dir);
+closedir($in_dir);
 
 @dir_contents = sort(@dir_contents);
 
@@ -756,6 +756,7 @@ if ($dname ne ".") {
     $wddir = $wddir . "/" . $dname;
 }
 my $base = basename($wddir);
+my $baseauthor;
 
 # FIXME: directory not the current one, or one specified with "..". 
 print "$base\n";
@@ -771,16 +772,20 @@ if ($base =~ /[[:upper:]](?:[[:upper:]]+|[[:lower:]]*)(?=$|[:upper:])/) {
 
 
 # if the File-name is CamelCase too, assume it's the title
-foreach $file (@dir_contents) {
-    $title="";
-    $author="";
+foreach my $file (@dir_contents) {
+    my $title="";
+    my $author="";
+    my $publisher;
+    my $date;
+    my $isbn;
 
     if (-f $file) {
 
         print "filename : $file\n";
         # my $suffix = (fileparse($file,'\.[^.]*'))[2];
-        
-        $name = $file;
+
+        my $name = $file;
+        my $suffix;
         ($name,$suffix) = $name =~ /^(.*)(\.[^.]*)$/;
 
         # Does Title contain isbn?
@@ -882,8 +887,8 @@ foreach $file (@dir_contents) {
 
 
         if ($fixpdf) {
-        $newfile = $name . 2 . $suffix; 
-        $tempmeta = $name . 2 . ".meta"; 
+        my $newfile = $name . 2 . $suffix; 
+        my $tempmeta = $name . 2 . ".meta"; 
             system ("pdftk \"$file\" dump_data output \"$tempmeta\" uncompress");
             system ("pdftk \"$file\" update_info \"$tempmeta\" output \"$newfile\"");
             rename ("$newfile", "$file");
@@ -950,7 +955,7 @@ foreach $file (@dir_contents) {
         if ($write) {
             $exifTool->Options(IgnoreMinorErrors => 1);
                 $exifTool->WriteInfo($file);
-            if ($error = $exifTool->GetValue('Error')) {
+            if (my $error = $exifTool->GetValue('Error')) {
                 print "$error\n";
             }
         }
