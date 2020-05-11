@@ -60,7 +60,7 @@ if ($info->{'PageCount'} ne '') {
 print "\n";
 
 # I also tried CAM::PDF and Text::Autoformat, and they were slow.
-open my $pdf_file,"<","/usr/bin/pdftotext -raw -nopgbrk -q \"$file\" - 2>/dev/null | fmt -s |"
+open my $pdf_file,"-|","/usr/bin/pdftotext -raw -nopgbrk -q \"$file\" - 2>/dev/null | fmt -s"
     or die "error opening pdf \"$file\"\n";
 while (<$pdf_file>) {
     print $_;
