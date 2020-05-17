@@ -6,7 +6,8 @@
 # Date:    2011-04-11
 # Revised: 2014-03-16
 # Revised: 2020-05-06
-# Version: 0.9
+# Revised: 2020-05-17
+# Version: 0.10
 # License: Artistic License 2.0 or MIT License
 # URL:     http://seegras.discordia.ch/Programs/
 #
@@ -29,7 +30,7 @@ my $f_prefix;
 my $bicap;
 my $write;
 my $dname;
-my $debug;
+my $debug=0;
 
 &Getopt::Long::Configure( 'pass_through', 'no_autoabbrev');
 &Getopt::Long::GetOptions(
@@ -42,6 +43,7 @@ my $debug;
     'format-prefix|p'           => \$f_prefix,
     'bicap|b'                   => \$bicap,
     'write|w'                   => \$write,
+    'debug|d'                   => \$debug,
 );
 
 if (!$ARGV[0]) {
@@ -804,16 +806,16 @@ foreach my $file (@dir_contents) {
         $title =~ s/- / - /g;
         $title =  cleanex($title);
         }
-
-        if (($author ne "") && ($title ne "")) {
-            print "from-nam1: $author ¤ $title\n"; 
-        } elsif (($title ne "") && ($baseauthor ne "")) {
-            $author = $baseauthor;
-            print "from-nam1: $author ¤ $title\n"; 
-        } elsif ($title ne "") {
-            print "from-nam1: $title\n"; 
+        if (! $f_authortitle && ! $f_titleauthor) {
+            if (($author ne "") && ($title ne "")) {
+                if ($debug) { print (stderr "from-name 1: $author ¤ $title\n"); };
+            } elsif (($title ne "") && ($baseauthor ne "")) {
+                $author = $baseauthor;
+                if ($debug) { print (stderr "from-name 1: $author ¤ $title\n"); };
+            } elsif ($title ne "") {
+                if ($debug) { print (stderr "from-name 1: $title\n"); };
+            }
         }
-
 # FIXME: Authors with comma or ";" separated
 # FIXME: Authors with last-comma-first
 
@@ -833,11 +835,12 @@ foreach my $file (@dir_contents) {
             $title =  cleanex($title);
             $publisher = cleanex($publisher);
                 $date = cleanex($date);
-            print "from-nam2: $author ¤ $title\n";
+                if ($debug) { print (stderr "from-name 2: $author ¤ $title\n"); };
         }
 
         # those need to be forced
         if ($f_authortitle && ! $f_titleauthor) {
+            # spaces
             if ($name =~ m/(.*?) - (.*)/) {
                 ($author, $title) = /(.*?) - (.*)/;
                 $title =  cleanex($title);
@@ -859,7 +862,34 @@ foreach my $file (@dir_contents) {
                     }
                 }
                 $author = cleanex($author);
-                print "from-nam3: $author ¤ $title\n";
+                if ($debug) { print (stderr "from-name 3: $author ¤ $title\n"); };
+            }
+            # no spaces
+            if ($name =~ m/(.*?)-(.*)/) {
+                ($author, $title) = /(.*?)-(.*)/;
+                $title =~ s/([A-Z-])/ $1/g;
+                $title =  cleanex($title);
+                # those need to be forced
+                if ($f_prefix) {
+                    # usually this comes from calibre, so:
+                    $title =~ s/_ /: /goi;
+                    if ($title =~ m/(.*), The$/) {
+                    $title =~ s/, The$//goi;
+                    $title = "The ". $title;
+                    }
+                    if ($title =~ m/(.*), A$/) {
+                    $title =~ s/, A$//goi;
+                    $title = "A ". $title;
+                    }
+                    if ($title =~ m/(.*), An$/) {
+                    $title =~ s/, An$//goi;
+                    $title = "An ". $title;
+                    }
+                }
+                $author =~ s/([A-Z-])/ $1/g;
+                $author = regex_author($author);
+                $author = cleanex($author);
+                if ($debug) { print (stderr "from-name 4: $author ¤ $title\n"); };
             }
         }
 
@@ -869,7 +899,7 @@ foreach my $file (@dir_contents) {
                 ($title, $author) = /(.*) - (.*)/;
                 $title =  cleanex($title);
                 $author = cleanex($author);
-                print "from-nam4: $author ¤ $title\n";
+                if ($debug) { print (stderr "from-name 5: $author ¤ $title\n"); };
             }
         }
 
@@ -882,7 +912,7 @@ foreach my $file (@dir_contents) {
                 ($title) = /(.*)/;
             }
             $title =  cleanex($title);
-            print "from-nam5: $title ¤ $date\n";
+            if ($debug) { print (stderr "from-name 6: $title ¤ $date\n"); };
         }
 
 
