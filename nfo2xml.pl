@@ -81,10 +81,17 @@ closedir($in_dir);
 		print $out_xml "      <String>$data->{set}</String>\n";
 	    } 
 	    print $out_xml "    </Simple>\n";
-	    foreach my $genre (@{$data->{genre}}) {
-		print $out_xml "    <Simple>\n";
-	        print $out_xml "    <Name>GENRE</Name>\n";
-		print $out_xml "	<String>$genre</String>\n";
+	    if(ref($data->{genre}) eq 'ARRAY') {
+	        foreach my $genre (@{$data->{genre}}) {
+		    print $out_xml "    <Simple>\n";
+	            print $out_xml "    <Name>GENRE</Name>\n";
+		    print $out_xml "	<String>$genre</String>\n";
+	            print $out_xml "    </Simple>\n";
+	        }
+	    } elsif ($data->{genre} ne "") {
+	        print $out_xml "    <Simple>\n";
+	        print $out_xml "      <Name>GENRE</Name>\n";
+	        print $out_xml "      <String>$data->{genre}</String>\n";
 	        print $out_xml "    </Simple>\n";
 	    }
 	    print $out_xml "  </Tag>\n";
@@ -181,14 +188,20 @@ closedir($in_dir);
 	}
 	# only print genre here if no series
 	if ($data->{showtitle} eq "") {
-	    foreach my $genre (@{$data->{genre}}) {
-		print $out_xml "    <Simple>\n";
-	        print $out_xml "    <Name>GENRE</Name>\n";
-		print $out_xml "	<String>$genre</String>\n";
+	    if(ref($data->{genre}) eq 'ARRAY') {
+	        foreach my $genre (@{$data->{genre}}) {
+		    print $out_xml "    <Simple>\n";
+	            print $out_xml "    <Name>GENRE</Name>\n";
+		    print $out_xml "	<String>$genre</String>\n";
+	            print $out_xml "    </Simple>\n";
+	        }
+	    } elsif ($data->{genre} ne "") {
+	        print $out_xml "    <Simple>\n";
+	        print $out_xml "      <Name>GENRE</Name>\n";
+	        print $out_xml "      <String>$data->{genre}</String>\n";
 	        print $out_xml "    </Simple>\n";
 	    }
 	}
-	
 	
 	if ($data->{tmdbid} ne "") {
 	    print $out_xml "    <Simple>\n";
