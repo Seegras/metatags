@@ -6,8 +6,8 @@
 # Author:  Peter Keel <seegras@discordia.ch>
 # Date:    2013-09-21
 # Revised: 2013-09-21
-# Revised: 2020-05-06
-# Version: 0.1
+# Revised: 2022-09-20
+# Version: 0.2
 # License: Artistic License 2.0 or MIT License
 # URL:     http://seegras.discordia.ch/Programs/
 #
@@ -27,6 +27,7 @@ use Pod::Usage;
 
 my $needshelp;
 my $dname;
+my $debug;
 
 &Getopt::Long::Configure( 'pass_through', 'no_autoabbrev');
 &Getopt::Long::GetOptions(
@@ -58,6 +59,9 @@ closedir($in_dir);
         # read XML file
         my $data = $xml->XMLin("$dname/$filename", suppressempty => '');
         open (my $out_xml, ">:encoding(UTF-8)","$dname/$name.xml");
+        if ($debug) {
+            print Dumper($data);
+        }
         print $out_xml "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
         print $out_xml "<!DOCTYPE Tags SYSTEM \"matroskatags.dtd\">\n";
         print $out_xml "<Tags>\n";
@@ -213,7 +217,6 @@ closedir($in_dir);
                 print $out_xml "    </Simple>\n";
             }
         }
-        
         if ($data->{tmdbid} ne "") {
             print $out_xml "    <Simple>\n";
             print $out_xml "      <Name>CATALOG_NUMBER</Name>\n";
@@ -226,10 +229,26 @@ closedir($in_dir);
             print $out_xml "      <String>$data->{id}</String>\n";
             print $out_xml "    </Simple>\n";
         }
-        if ($data->{uniqueid} ne "") {
+        if(ref($data->{uniqueid}) eq 'ARRAY') {
+            foreach my $uniqueid (@{$data->{uniqueid}}) {
+                print $out_xml "    <Simple>\n";
+                print $out_xml "    <Name>CATALOG_NUMBER</Name>\n";
+                print $out_xml "        <String>$uniqueid->{content}</String>\n";
+                print $out_xml "    </Simple>\n";
+            }
+            # bad hack to make imdb tag the last, which mediainfo will then show
+            foreach my $uniqueid (@{$data->{uniqueid}}) {
+                if ($uniqueid->{type} eq "imdb") {
+                    print $out_xml "    <Simple>\n";
+                    print $out_xml "    <Name>CATALOG_NUMBER</Name>\n";
+                    print $out_xml "        <String>$uniqueid->{content}</String>\n";
+                    print $out_xml "    </Simple>\n";
+                }
+            }
+        } elsif ($data->{uniqueid} ne "") {
             print $out_xml "    <Simple>\n";
             print $out_xml "      <Name>CATALOG_NUMBER</Name>\n";
-            print $out_xml "      <String>$data->{uniqueid}</String>\n";
+            print $out_xml "      <String>$data->{uniqueid}->{content}</String>\n";
             print $out_xml "    </Simple>\n";
         }
         print $out_xml "  </Tag>\n";
