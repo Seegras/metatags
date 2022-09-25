@@ -19,6 +19,8 @@ my $needshelp = 0;
 my $file_name;
 my $in_file;
 my $only4k = 0;
+my $lowres = 0;
+my $nonhd = 0;
 my @files = ();
 
 
@@ -26,6 +28,8 @@ my @files = ();
 &Getopt::Long::GetOptions(
 		'help|h'		=> \$needshelp,
 		'4K|4'		=> \$only4k,
+		'lowres|l'		=> \$lowres,
+		'nonhd|n'		=> \$nonhd,
 );
 
 die "Usage: 720or1080 filename\n"       unless($ARGV[0]);
@@ -43,19 +47,19 @@ foreach my $file_name (@ARGV) {
 	my $width=$2;
 	my $height=$3;
         #print "$width $height";
-	if (($width > 1920) && ($height <= 2160)) {
+	if (($width > 1920) && ($height <= 2160) && ! $nonhd && ! $lowres ) {
 	print ("2160p: ", $file, " ", $width, " ", $height, "\n");
 	}
-	if (($width > 1280) && ($width <= 1920) && ! $only4k) {
+	if (($width > 1280) && ($width <= 1920) && ! $only4k && ! $nonhd && ! $lowres  ) {
 	print ("1080p: ", $file, " ", $width, " ", $height, "\n");
 	}
-	if (($width > 720) && ($width <= 1280) && ($height <= 720) && ! $only4k) {
+	if (($width > 720) && ($width <= 1280) && ($height <= 720) && ! $only4k && ! $nonhd ) {
 	print (" 720p: ", $file, " ", $width, " ", $height, "\n");
 	}
 	if (($width <= 720) && ($height <= 576) && ($height >= 480) && ! $only4k) {
 	print ("  DVD: ", $file, " ", $width, " ", $height, "\n");
 	}
-	if (($width < 720) && ($height < 480) && ! $only4k) {
+	if (($width <= 720) && ($height < 480) && ! $only4k) {
 	print ("  LOW: ", $file, " ", $width, " ", $height, "\n");
 	}
     }
