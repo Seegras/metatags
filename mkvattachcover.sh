@@ -23,6 +23,17 @@ if [ -e "$filename_no_ext-poster.jpg" ]; then
     mkvpropedit --attachment-name small_cover.jpg "$filename" \
         --add-attachment "$filename_no_ext-poster3.jpg"
     rm "$filename_no_ext-poster2.jpg" "$filename_no_ext-poster3.jpg"
+elif [ -e "season-all-poster.jpg" ]; then
+    # It's a series
+    convert -scale 600x\> "season-all-poster.jpg" \
+        "$filename_no_ext-poster2.jpg"
+    convert -scale 120x\> "season-all-poster.jpg" \
+        "$filename_no_ext-poster3.jpg"
+    mkvpropedit --attachment-name cover.jpg "$filename" \
+        --add-attachment "$filename_no_ext-poster2.jpg"
+    mkvpropedit --attachment-name small_cover.jpg "$filename" \
+        --add-attachment "$filename_no_ext-poster3.jpg"
+    rm "$filename_no_ext-poster2.jpg" "$filename_no_ext-poster3.jpg"
 fi
 if [ -e "$filename_no_ext-fanart.jpg" ]; then
     convert -scale x600\> "$filename_no_ext-fanart.jpg" \
