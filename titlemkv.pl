@@ -55,7 +55,7 @@ foreach my $filename (@dir_contents) {
     my $title;
     (my $name, my $suffix) = $filename =~ /^(.*)(\.[^.]*)$/;
         if ($filename ne ".." and $filename ne "." and $suffix eq ".mkv") {
-            my $oldtitle = `/usr/bin/mediainfo --Output="General;%Title%" $dname/$filename`;
+            my $oldtitle = `/usr/bin/mediainfo --Output="General;%Title%" "$dname/$filename"`;
             chomp($oldtitle);
             if ($fixtitle) {
                 $title = $oldtitle;   # title, gets sanitized
